@@ -233,7 +233,10 @@
       const utterance = new SpeechSynthesisUtterance(name);
       utterance.lang = 'es-ES';
       utterance.rate = 0.85;
-      utterance.voice = speech.getVoices().find(voice => voice.lang.toLowerCase().startsWith('es')) || null;
+      const spanishVoices = speech.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('es'));
+      const femaleVoice = spanishVoices.find(voice => /\b(helena|laura|elvira|sabina|dalia|paloma|m[oó]nica|paulina|sof[ií]a|luc[ií]a|marta|marisol|alba|isabel|sonia|sara|camila|carmen|female|femenina)\b/i.test(voice.name));
+      utterance.voice = femaleVoice || spanishVoices[0] || null;
+      if (!femaleVoice) utterance.pitch = 1.25;
       speech.speak(utterance);
     }
 

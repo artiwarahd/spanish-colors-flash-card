@@ -35,10 +35,12 @@ const jobs = new Map();
 let nextJob = 0;
 const spoken = [];
 let cancellations = 0;
-const spanishVoice = { lang: 'es-ES' };
+const maleSpanishVoice = { lang: 'es-ES', name: 'Microsoft Alvaro' };
+const femaleSpanishVoice = { lang: 'es-ES', name: 'Microsoft Helena' };
+let availableVoices = [maleSpanishVoice, femaleSpanishVoice];
 class Utterance { constructor(text) { this.text = text; } }
 const speech = {
-  getVoices: () => [spanishVoice],
+  getVoices: () => availableVoices,
   speak: utterance => spoken.push(utterance),
   cancel: () => cancellations++
 };
@@ -72,8 +74,14 @@ assert.equal(blanco['.card__name'].hidden, false);
 assert.match(blanco['aria-label'], /blanco/);
 assert.equal(spoken[0].text, 'blanco');
 assert.equal(spoken[0].lang, 'es-ES');
-assert.equal(spoken[0].voice, spanishVoice);
+assert.equal(spoken[0].voice, femaleSpanishVoice);
+availableVoices = [maleSpanishVoice];
 cards.filter(card => card !== blanco).forEach(card => card.click());
+const [fallbackJobId, fallbackJob] = jobs.entries().next().value;
+jobs.delete(fallbackJobId);
+fallbackJob();
+assert.equal(spoken[1].voice, maleSpanishVoice);
+assert.equal(spoken[1].pitch, 1.25);
 assert.equal(nodes['#reset'].hidden, false);
 nodes['#reset'].click();
 assert.equal(nodes['#count'].textContent, '0');
