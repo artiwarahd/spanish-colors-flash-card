@@ -202,7 +202,7 @@
     <main class="grid" id="cards" aria-label="Ten Spanish color flash cards"></main>
 
     <footer class="footer">
-      <p class="footer__note">Flip all ten cards to play again.</p>
+      <p class="footer__note">Tap a revealed word to hear it again.</p>
       <button class="reset" id="reset" type="button" hidden>↺ &nbsp; Fold all cards</button>
     </footer>
   </div>
@@ -225,23 +225,15 @@
     const dots = document.querySelector('#dots');
     const reset = document.querySelector('#reset');
     const timers = new Set();
-    const speech = window.speechSynthesis;
+    const sounds = [];
     let opened = 0;
-
-    function sayColor(name) {
-      if (!speech || !window.SpeechSynthesisUtterance) return;
-      const utterance = new SpeechSynthesisUtterance(name);
-      utterance.lang = 'es-ES';
-      utterance.rate = 0.85;
-      const spanishVoices = speech.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('es'));
-      const femaleVoice = spanishVoices.find(voice => /\b(helena|laura|elvira|sabina|dalia|paloma|m[oó]nica|paulina|sof[ií]a|luc[ií]a|marta|marisol|alba|isabel|sonia|sara|camila|carmen|female|femenina)\b/i.test(voice.name));
-      utterance.voice = femaleVoice || spanishVoices[0] || null;
-      if (!femaleVoice) utterance.pitch = 1.25;
-      speech.speak(utterance);
-    }
 
     colors.forEach(([name, color, ink], index) => {
       const number = String(index + 1).padStart(2, '0');
+      // Three seconds of silence in each clip lets iOS start audio during the tap.
+      const audio = new Audio(`audio/${name === 'marrón' ? 'marron' : name}.mp3`);
+      audio.preload = 'auto';
+      sounds.push(audio);
       const card = document.createElement('button');
       card.type = 'button';
       card.className = 'card';
@@ -265,7 +257,14 @@
           </span>
         </span>`;
       card.addEventListener('click', () => {
-        if (card.classList.contains('is-flipped')) return;
+        if (card.classList.contains('is-flipped')) {
+          if (card.classList.contains('is-named')) {
+            audio.currentTime = 3;
+            audio.play().catch(() => {});
+          }
+          return;
+        }
+        audio.play().catch(() => {});
         card.classList.add('is-flipped');
         card.setAttribute('aria-label', `Card ${[...grid.children].indexOf(card) + 1}. Color shown; Spanish word appears in three seconds.`);
         opened++;
@@ -277,8 +276,7 @@
           card.querySelector('.card__wait').hidden = true;
           card.querySelector('.card__name').hidden = false;
           card.classList.add('is-named');
-          card.setAttribute('aria-label', `Card ${[...grid.children].indexOf(card) + 1}: ${name}.`);
-          sayColor(name);
+          card.setAttribute('aria-label', `Card ${[...grid.children].indexOf(card) + 1}: ${name}. Tap to hear it again.`);
         }, 3000);
         timers.add(timer);
       });
@@ -306,7 +304,7 @@
     reset.addEventListener('click', () => {
       timers.forEach(clearTimeout);
       timers.clear();
-      speech?.cancel();
+      sounds.forEach(audio => { audio.pause(); audio.currentTime = 0; });
       opened = 0;
       count.textContent = '0';
       reset.hidden = true;
