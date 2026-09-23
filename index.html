@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f2e6">
+  <title>Colores en español — Flash Cards</title>
+  <style>
+    :root { color-scheme: light; font-family: "Trebuchet MS", Arial, sans-serif; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 2% 3%, #f5d7c4 0 3%, transparent 3.1%),
+        radial-gradient(circle at 98% 2%, #f6dea2 0 4%, transparent 4.1%),
+        radial-gradient(circle at 2% 100%, #e5e8b9 0 6%, transparent 6.1%),
+        radial-gradient(circle at 98% 100%, #f5d9b0 0 7%, transparent 7.1%),
+        #f8f2e6;
+      color: #332a22;
+    }
+    button { font: inherit; }
+    .shell {
+      width: min(1540px, calc(100% - 56px));
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: auto;
+      padding: clamp(18px, 2.5vh, 32px) 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: clamp(14px, 2vh, 24px);
+    }
+    .header { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+    .eyebrow, .tiny { font-size: 11px; font-weight: 800; letter-spacing: .19em; text-transform: uppercase; }
+    .eyebrow { color: #b06443; margin: 0 0 10px; }
+    h1 {
+      margin: 0;
+      font-family: Impact, "Arial Narrow", sans-serif;
+      font-weight: 400;
+      font-size: clamp(48px, 5.4vw, 90px);
+      letter-spacing: .025em;
+      line-height: .94;
+      text-transform: uppercase;
+    }
+    h1 span { color: #cd6a46; }
+    .intro { margin: 12px 0 0; color: #6f6255; font-size: clamp(13px, 1.05vw, 16px); }
+    .progress { text-align: right; min-width: 180px; padding-bottom: 5px; }
+    .progress__count { font-family: Impact, "Arial Narrow", sans-serif; font-size: clamp(28px, 3vw, 46px); line-height: 1; }
+    .progress__count small { font-size: .48em; color: #a79a88; }
+    .progress__dots { display: flex; justify-content: flex-end; gap: 6px; margin-top: 12px; }
+    .progress__dots span { width: 9px; height: 9px; border: 1px solid #bcae99; border-radius: 50%; background: transparent; }
+    .progress__dots span.on { background: #ca704e; border-color: #ca704e; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: clamp(10px, 1.2vw, 18px);
+      min-height: 0;
+    }
+    .card { position: relative; min-width: 0; min-height: 0; padding: 0; border: 0; background: none; cursor: pointer; perspective: 1000px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .card:focus-visible { outline: 3px solid #9b4b30; outline-offset: 4px; border-radius: 16px; }
+    .card.is-flipped { cursor: default; }
+    .card__rotator { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2,.7,.15,1); }
+    .card.is-flipped .card__rotator { transform: rotateY(180deg); }
+    .card__face {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 15px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      box-shadow: 0 9px 20px #6951351b, 0 2px 4px #69513514;
+    }
+    .card__front {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(14px, 1.4vw, 22px);
+      border: 1px solid #e0d4bd;
+      background: repeating-linear-gradient(0deg, #fffaf1 0 27px, #f7f0e3 28px), #fffaf1;
+      text-align: left;
+    }
+    .card__front::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 54px;
+      height: 54px;
+      background: linear-gradient(135deg, #dec9a8 0 49%, #f5e5c9 50% 100%);
+      clip-path: polygon(0 0, 100% 100%, 100% 0);
+      filter: drop-shadow(-2px 3px 2px #68503330);
+    }
+    .card__top, .card__bottom, .card__backtop { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .card__top { color: #947f69; }
+    .card__question { align-self: center; font-family: Georgia, serif; font-style: italic; font-size: clamp(70px, 9vh, 138px); line-height: 1; color: #d4a890; transform: rotate(-9deg); }
+    .card__bottom { color: #a35e42; }
+    .card__arrow { font-size: 22px; line-height: 1; }
+    .card__back {
+      transform: rotateY(180deg);
+      padding: clamp(13px, 1.3vw, 21px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #332a2229;
+      background: var(--color);
+      color: var(--ink);
+      text-align: left;
+      isolation: isolate;
+    }
+    .card__back::before {
+      content: "";
+      position: absolute;
+      width: 92%;
+      aspect-ratio: 1;
+      left: 26%;
+      top: 10%;
+      border: clamp(17px, 2.5vw, 38px) solid currentColor;
+      border-radius: 50%;
+      opacity: .12;
+      z-index: -1;
+    }
+    .card__back::after {
+      content: "";
+      position: absolute;
+      width: 65%;
+      aspect-ratio: 1;
+      left: -15%;
+      bottom: 18%;
+      border-radius: 48% 52% 70% 30%;
+      background: #ffffff75;
+      opacity: .5;
+      z-index: -1;
+      transform: rotate(-25deg);
+    }
+    .card__backtop { position: relative; z-index: 1; }
+    .card__swatch {
+      position: absolute;
+      width: clamp(70px, 7vw, 120px);
+      aspect-ratio: 1;
+      left: 50%;
+      top: 45%;
+      transform: translate(-50%, -50%) rotate(-12deg);
+      border: 8px solid #ffffff8a;
+      border-radius: 18% 82% 63% 37% / 40% 44% 56% 60%;
+      background: var(--color);
+      box-shadow: 10px 14px 0 #00000018, inset 0 0 0 1px #0000000c;
+    }
+    .card__reveal { position: relative; z-index: 1; min-height: 54px; display: flex; flex-direction: column; justify-content: end; }
+    .card__wait { font-size: clamp(10px, .9vw, 13px); font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .card__timer { display: block; width: 100%; height: 3px; margin-top: 10px; background: currentColor; opacity: .23; border-radius: 3px; overflow: hidden; }
+    .card__timer::before { content: ""; display: block; height: 100%; width: 100%; background: currentColor; transform-origin: left; transform: scaleX(0); }
+    .card.is-flipped:not(.is-named) .card__timer::before { animation: timer 3s linear forwards; }
+    @keyframes timer { to { transform: scaleX(1); } }
+    .card__name { font-family: Impact, "Arial Narrow", sans-serif; font-size: clamp(25px, 2.65vw, 45px); font-weight: 400; letter-spacing: .025em; line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
+    .card__name[hidden], .card__wait[hidden] { display: none; }
+    .footer { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .footer__note { margin: 0; color: #8a7b69; font-size: 12px; }
+    .reset { padding: 11px 19px; border: 1px solid #51382d; border-radius: 999px; background: #51382d; color: white; font-size: 13px; font-weight: 800; cursor: pointer; touch-action: manipulation; }
+    .reset:hover { background: #704634; }
+    .reset:focus-visible { outline: 3px solid #bc704f; outline-offset: 3px; }
+    .reset[hidden] { visibility: hidden; display: block; }
+    @media (max-width: 800px) {
+      .shell { display: block; width: min(640px, calc(100% - 28px)); min-height: 100dvh; }
+      .header { align-items: start; margin-bottom: 20px; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: clamp(170px, 44vw, 260px); }
+      .footer { margin-top: 20px; }
+      .progress { min-width: auto; }
+      .progress__dots { display: none; }
+      .card__name { font-size: clamp(26px, 6vw, 40px); }
+    }
+    @media (max-width: 480px) {
+      .header { display: block; }
+      .progress { display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 15px 0 0; }
+      .progress__count { font-size: 27px; }
+      .card__front, .card__back { padding: 13px; }
+      .card__question { font-size: 72px; }
+      .tiny { font-size: 9px; }
+      .footer__note { max-width: 200px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card__rotator { transition-duration: .01ms; }
+      .card__timer::before { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="header">
+      <div>
+        <p class="eyebrow">A little game of color</p>
+        <h1>Colores <span>en español</span></h1>
+        <p class="intro">Tap a card, see its color, then guess the Spanish word before it appears.</p>
+      </div>
+      <div class="progress" role="status" aria-live="polite">
+        <div class="progress__count"><span id="count">0</span> <small>/ 10 flipped</small></div>
+        <div class="progress__dots" id="dots" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <main class="grid" id="cards" aria-label="Ten Spanish color flash cards"></main>
+
+    <footer class="footer">
+      <p class="footer__note">Flip all ten cards to play again.</p>
+      <button class="reset" id="reset" type="button" hidden>↺ &nbsp; Fold all cards</button>
+    </footer>
+  </div>
+
+  <script>
+    const colors = [
+      ['blanco', '#f7f5ef', '#554d42'],
+      ['marrón', '#805235', '#fff8ef'],
+      ['negro', '#1f2025', '#fff8ee'],
+      ['azul', '#73c5dc', '#183c52'],
+      ['naranja', '#f47728', '#462816'],
+      ['rosa', '#ee8eb8', '#5b2440'],
+      ['verde', '#76bd56', '#24452a'],
+      ['amarillo', '#f4ca4d', '#554119'],
+      ['rojo', '#dc3e42', '#fff8eb'],
+      ['morado', '#ad68c8', '#fff7ff']
+    ];
+    const grid = document.querySelector('#cards');
+    const count = document.querySelector('#count');
+    const dots = document.querySelector('#dots');
+    const reset = document.querySelector('#reset');
+    const timers = new Set();
+    const speech = window.speechSynthesis;
+    let opened = 0;
+
+    function sayColor(name) {
+      if (!speech || !window.SpeechSynthesisUtterance) return;
+      const utterance = new SpeechSynthesisUtterance(name);
+      utterance.lang = 'es-ES';
+      utterance.rate = 0.85;
+      utterance.voice = speech.getVoices().find(voice => voice.lang.toLowerCase().startsWith('es')) || null;
+      speech.speak(utterance);
+    }
+
+    colors.forEach(([name, color, ink], index) => {
+      const number = String(index + 1).padStart(2, '0');
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'card';
+      card.style.setProperty('--color', color);
+      card.style.setProperty('--ink', ink);
+      card.setAttribute('aria-label', `Card ${index + 1} of 10. Tap to reveal the color.`);
+      card.innerHTML = `
+        <span class="card__rotator">
+          <span class="card__face card__front" aria-hidden="true">
+            <span class="card__top tiny"><span>COLOR CARD</span><span class="card__number">${number} / 10</span></span>
+            <span class="card__question">?</span>
+            <span class="card__bottom tiny"><span>TAP TO TURN</span><span class="card__arrow">↗</span></span>
+          </span>
+          <span class="card__face card__back" aria-hidden="true">
+            <span class="card__backtop tiny"><span>COLOR STUDY</span><span class="card__number">${number} / 10</span></span>
+            <span class="card__swatch"></span>
+            <span class="card__reveal">
+              <span class="card__wait">Spanish word in 3 seconds<span class="card__timer"></span></span>
+              <span class="card__name" lang="es" hidden>${name}</span>
+            </span>
+          </span>
+        </span>`;
+      card.addEventListener('click', () => {
+        if (card.classList.contains('is-flipped')) return;
+        card.classList.add('is-flipped');
+        card.setAttribute('aria-label', `Card ${[...grid.children].indexOf(card) + 1}. Color shown; Spanish word appears in three seconds.`);
+        opened++;
+        count.textContent = opened;
+        dots.children[opened - 1].classList.add('on');
+        if (opened === colors.length) reset.hidden = false;
+        const timer = setTimeout(() => {
+          timers.delete(timer);
+          card.querySelector('.card__wait').hidden = true;
+          card.querySelector('.card__name').hidden = false;
+          card.classList.add('is-named');
+          card.setAttribute('aria-label', `Card ${[...grid.children].indexOf(card) + 1}: ${name}.`);
+          sayColor(name);
+        }, 3000);
+        timers.add(timer);
+      });
+      grid.append(card);
+      dots.append(document.createElement('span'));
+    });
+
+    function shuffleCards() {
+      const cards = [...grid.children];
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      if (cards.every((card, index) => card === grid.children[index])) cards.push(cards.shift());
+      grid.replaceChildren(...cards);
+      cards.forEach((card, index) => {
+        const number = `${String(index + 1).padStart(2, '0')} / 10`;
+        card.querySelectorAll('.card__number').forEach(label => label.textContent = number);
+        card.setAttribute('aria-label', `Card ${index + 1} of 10. Tap to reveal the color.`);
+      });
+    }
+
+    shuffleCards();
+
+    reset.addEventListener('click', () => {
+      timers.forEach(clearTimeout);
+      timers.clear();
+      speech?.cancel();
+      opened = 0;
+      count.textContent = '0';
+      reset.hidden = true;
+      [...grid.children].forEach(card => {
+        card.classList.remove('is-flipped', 'is-named');
+        card.querySelector('.card__wait').hidden = false;
+        card.querySelector('.card__name').hidden = true;
+      });
+      [...dots.children].forEach(dot => dot.classList.remove('on'));
+      shuffleCards();
+      grid.firstElementChild.focus();
+    });
+  </script>
+</body>
+</html>
